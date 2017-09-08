@@ -145,12 +145,12 @@ def main():
 
     batch_size = 128
     embedding_size = 300  # Dimension of the embedding vector.
-    learning_rate = 1.0
+    learning_rate = 1
 
-    validate = ['apple','tree','leaf', 'pineapple'] # this is not a real validation, more like a visual suuport to see progress 
-    num_nce_samples = 0    # Number of negative examples to sample.
-    iterations = 50000 # specify how many steps for optimization
-    min_epochs = 5 # specify the minimum number of passes over the whole dataset
+    validate = ['apple','tree','leaf', 'pineapple', '0st', 'the', 'a'] # this is not a real validation, more like a visual suuport to see progress 
+    num_nce_samples = 32    # Number of negative examples to sample.
+    iterations = 20000 # specify how many steps for optimization
+    min_epochs = 2000 # specify the minimum number of passes over the whole dataset
     
     word_dim, \
     context_dim, \
@@ -186,7 +186,9 @@ def main():
             average_loss = 0
             batch_offset = 0
             num_epochs = 0
-            for iteration in range(iterations):
+            num_iterations = 0
+            while num_iterations < iterations or num_epochs < min_epochs:
+                num_iterations += 1
                 if batch_offset < batch_size:
                     num_epochs += 1
                     print('epoch %d' % num_epochs)
@@ -206,14 +208,14 @@ def main():
                         feed_dict = feed_dict)
                 
                 average_loss += loss_value
-                if iteration % 2000 == 0:
+                if num_iterations % 2000 == 0:
                     average_loss /= 2000
                     # The average loss is an estimate of the loss over the last 2000 batches.
-                    print('Average loss at iteration ', iteration, ': ', average_loss)
+                    print('Average loss at iteration ', num_iterations, ': ', average_loss)
                     average_loss = 0
     
                 # Note that this is expensive (~20% slowdown if computed every 500 steps)
-                if iteration % 10000 == 0:
+                if num_iterations % 10000 == 0:
                     sim = sess.run(fetches = similarity, feed_dict = {validation_input: validation_data})
                     for i in range(len(validate)):
                         valid_word = validate[i]
@@ -226,6 +228,9 @@ def main():
                         print(log_str)
                             
             final_embeddings = normalized_embeddings.eval()
+            vocabulary = word_encoder.inverse_transform(range(word_dim))
+            np.savetxt('emb.txt', np.c_[vocabulary, final_embeddings], delimiter=' ', fmt='%s')
+            
        
 #%% run the script
 if __name__ == "__main__":
