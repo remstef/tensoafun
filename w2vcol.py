@@ -198,17 +198,17 @@ def main():
                     if num_epochs % 10:
                       save_path = saver.save(sess, 'tmp/model.ckpt', global_step=num_epochs)
                       print('Model checkointed in: %s' % save_path)
-                if num_epochs % 2 == 0:
-                    sim = sess.run(fetches = similarity, feed_dict = {validation_input: validation_data})
-                    for i in range(len(validate)):
-                        valid_word = validate[i]
-                        top_k = 8  # number of nearest neighbors
-                        nearest = (-sim[i, :]).argsort()[1:top_k + 1]
-                        log_str = 'Nearest to %s:' % valid_word
-                        for k in range(top_k):
-                            close_word = word_encoder.inverse_transform([nearest[k]])
-                            log_str = '%s %s,' % (log_str, close_word)
-                        print(log_str)
+                    if num_epochs % 2 == 0:
+                        sim = sess.run(fetches = similarity, feed_dict = {validation_input: validation_data})
+                        for i in range(len(validate)):
+                            valid_word = validate[i]
+                            top_k = 8  # number of nearest neighbors
+                            nearest = (-sim[i, :]).argsort()[1:top_k + 1]
+                            log_str = 'Nearest to %s:' % valid_word
+                            for k in range(top_k):
+                                close_word = word_encoder.inverse_transform([nearest[k]])
+                                log_str = '%s %s,' % (log_str, close_word)
+                            print(log_str)
 
               
                 input_batch, context_batch, batch_offset = generate_batch_data(
