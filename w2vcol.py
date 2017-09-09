@@ -14,14 +14,15 @@ and https://raw.githubusercontent.com/adventuresinML/adventures-in-ml-code/8c13d
 import sklearn.preprocessing
 import math
 import datetime as dt
-import sys
+import sys, os
 import gzip
 
 import numpy as np
 import tensorflow as tf
 
 #%% test variables
-testfile = '/Users/rem/data/wiki.en.simple/simplewikipedia_fruits_1skip3gram.txt'
+#testfile = os.environ.get('DATA_HOME', os.environ['HOME'] + '/data') + '/wiki.en.simple/simplewikipedia_fruits_1skip3gram.txt'
+testfile = os.environ.get('DATA_HOME', os.environ['HOME'] + '/data') + '/text8.sg31.txt'
 
 #%% readfile 
 def readfile(fin):
@@ -147,10 +148,10 @@ def main():
     embedding_size = 300  # Dimension of the embedding vector.
     learning_rate = 1
 
-    validate = ['apple','tree','leaf', 'pineapple', '0st', 'the', 'a'] # this is not a real validation, more like a visual suuport to see progress 
-    num_nce_samples = 32    # Number of negative examples to sample.
+    validate = ['apple','tree','leaf', 'pineapple', 'king', 'man', 'the', 'a'] # this is not a real validation, more like a visual suuport to see progress 
+    num_nce_samples = 64    # Number of negative examples to sample.
     iterations = 20000 # specify how many steps for optimization
-    min_epochs = 2000 # specify the minimum number of passes over the whole dataset
+    min_epochs = 20 # specify the minimum number of passes over the whole dataset
     
     word_dim, \
     context_dim, \
@@ -176,6 +177,8 @@ def main():
                 len(validate), 
                 learning_rate, 
                 num_nce_samples)
+        
+        saver = tf.train.Saver()
     
         with tf.Session() as sess:
             
@@ -192,6 +195,9 @@ def main():
                 if batch_offset < batch_size:
                     num_epochs += 1
                     print('epoch %d' % num_epochs)
+                    if num_epochs % 10:
+                      save_path = saver.save(sess, 'tmp/model.ckpt', global_step=num_epochs)
+                      print('Model checkointed in: %s' % save_path)
               
                 input_batch, context_batch, batch_offset = generate_batch_data(
                         word_data, context_data, batch_size, batch_offset)
@@ -230,6 +236,11 @@ def main():
             final_embeddings = normalized_embeddings.eval()
             vocabulary = word_encoder.inverse_transform(range(word_dim))
             np.savetxt('emb.txt', np.c_[vocabulary, final_embeddings], delimiter=' ', fmt='%s')
+
+            save_path = saver.save(sess, 'tmp/model.ckpt', global_step=-1)
+            print('Model saved in file: %s' % save_path)
+
+
             
        
 #%% run the script
